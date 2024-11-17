@@ -65,7 +65,9 @@ jobs:
           ARN_ROLE: ${{ secrets.ARN_ROLE}}
           WEBSITE_OWNER_EMAIL: ${{ secrets.WEBSITE_OWNER_EMAIL}}
         run: |
+          kubectl version
           envsubst < eks/aws_auth.yaml | kubectl apply -f -
+          cat eks/aws_auth.yaml
           kubectl apply -f eks/deployment.yaml
           kubectl apply -f eks/service.yaml
           envsubst < eks/issuer.yaml |  kubectl apply -f -
