@@ -5,7 +5,7 @@ metadata:
   namespace: kube-system
 data:
   mapRoles: |
-    - rolearn: to-be-replaced
+    - rolearn: $ROLE_ARN
       username: gh-actions-learning-organisation-simple-bank
       groups:
         - system:masters
