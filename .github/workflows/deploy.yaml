@@ -65,10 +65,10 @@ jobs:
           ROLE_ARN: ${{ secrets.ARN_ROLE}}
           WEBSITE_OWNER_EMAIL: ${{ secrets.WEBSITE_OWNER_EMAIL}}
         run: |
-          envsubst < eks/aws_auth.yml > eks/aws_auth.yml
-          envsubst < eks/issuer.yml > eks/issuer.yml
-          kubectl apply -f eks/aws_auth.yml
-          kubectl apply -f eks/deployment.yml
-          kubectl apply -f eks/service.yml
-          kubectl apply -f eks/issuer.yml
-          kubectl apply -f eks/ingress.yml
+          envsubst < eks/aws_auth.yaml > eks/aws_auth.yaml
+          envsubst < eks/issuer.yaml > eks/issuer.yaml
+          kubectl apply -f eks/aws_auth.yaml
+          kubectl apply -f eks/deployment.yaml
+          kubectl apply -f eks/service.yaml
+          kubectl apply -f eks/issuer.yaml
+          kubectl apply -f eks/ingress.yaml
