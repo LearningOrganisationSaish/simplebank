@@ -43,25 +43,27 @@ jobs:
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t latest .
           docker push -a $REGISTRY/$REPOSITORY
 
-      - name: Update aws_auth.yaml
-        uses: fjogeleit/yaml-update-action@main
-        with:
-          commitChange: false
-          changes: |
-            {
-              "eks/issuer.yaml": {
-                "spec.acme.email": ${{ secrets.WEBSITE_OWNER_EMAIL}}
-              },
-              "eks/aws_auth.yaml": {
-                "data.mapRoles.rolearn": ${{ secrets.ARN_ROLE}}
-              },
-            }
-
+#      - name: Update aws_auth.yaml
+#        uses: fjogeleit/yaml-update-action@main
+#        with:
+#          commitChange: false
+#          changes: |
+#            {
+#              "eks/issuer.yaml": {
+#                "spec.acme.email": ${{ secrets.WEBSITE_OWNER_EMAIL}}
+#              },
+#              "eks/aws_auth.yaml": {
+#                "data.mapRoles.rolearn": ${{ secrets.ARN_ROLE}}
+#              },
+#            }
 
       - name: Deploy image to Amazon EKS
+        env:
+          ROLE_ARN: ${{ secrets.ARN_ROLE}}
+          WEBSITE_OWNER_EMAIL: ${{ secrets.WEBSITE_OWNER_EMAIL}}
         run: |
-          kubectl apply -f aws_auth.yml
+          envsubst < kubectl apply -f aws_auth.yml
           kubectl apply -f deployment.yml
           kubectl apply -f service.yml
-          kubectl apply -f issuer.yml
+          envsubst < kubectl apply -f issuer.yml
           kubectl apply -f ingress.yml
