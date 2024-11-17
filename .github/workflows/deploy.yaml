@@ -40,8 +40,11 @@ jobs:
           REPOSITORY: simplebank
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t latest .
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:latest .
           docker push -a $REGISTRY/$REPOSITORY
+
+      - name: Update Kube config
+        run: aws eks update-kubeconfig --name simple_bank --region us-east-1
 
 #      - name: Update aws_auth.yaml
 #        uses: fjogeleit/yaml-update-action@main
@@ -62,8 +65,10 @@ jobs:
           ROLE_ARN: ${{ secrets.ARN_ROLE}}
           WEBSITE_OWNER_EMAIL: ${{ secrets.WEBSITE_OWNER_EMAIL}}
         run: |
-          envsubst < kubectl apply -f eks/aws_auth.yml
+          envsubst < eks/aws_auth.yml > eks/aws_auth.yml
+          envsubst < eks/issuer.yml > eks/issuer.yml
+          kubectl apply -f eks/aws_auth.yml
           kubectl apply -f eks/deployment.yml
           kubectl apply -f eks/service.yml
-          envsubst < kubectl apply -f eks/issuer.yml
+          kubectl apply -f eks/issuer.yml
           kubectl apply -f eks/ingress.yml
