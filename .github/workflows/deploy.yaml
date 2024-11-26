@@ -46,20 +46,6 @@ jobs:
       - name: Update Kube config
         run: aws eks update-kubeconfig --name simple_bank --region us-east-1
 
-#      - name: Update aws_auth.yaml
-#        uses: fjogeleit/yaml-update-action@main
-#        with:
-#          commitChange: false
-#          changes: |
-#            {
-#              "eks/issuer.yaml": {
-#                "spec.acme.email": ${{ secrets.WEBSITE_OWNER_EMAIL}}
-#              },
-#              "eks/aws_auth.yaml": {
-#                "data.mapRoles.rolearn": ${{ secrets.ARN_ROLE}}
-#              },
-#            }
-
       - name: Deploy image to Amazon EKS
         env:
           ARN_ROLE: ${{ secrets.ARN_ROLE}}
