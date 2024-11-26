@@ -1,0 +1,79 @@
+package api
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"net/http"
+	"time"
+)
+
+type renewAccessTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type renewAccessTokenResponse struct {
+	AccessToken string `json:"access_token"`
+	// this will tell the client when the access token will expire to set up a schedule to renew access token later
+	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
+}
+
+func (s *Server) renewAccessToken(ctx *gin.Context) {
+	var req renewAccessTokenRequest
+	if err := ctx.ShouldBindBodyWithJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	refreshPayload, err := s.tokenMaker.VerifyToken(req.RefreshToken)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	session, err := s.store.GetSession(ctx, refreshPayload.ID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	}
+
+	if session.IsBlocked {
+		err := fmt.Errorf("blocked session")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	if session.Username != refreshPayload.Username {
+		err := fmt.Errorf("incorrect session user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	if session.RefreshToken != req.RefreshToken {
+		err := fmt.Errorf("mismatched session token")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	if time.Now().After(session.ExpiresAt) {
+		err := fmt.Errorf("session expired")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	accessToken, accessPayload, err := s.tokenMaker.CreateToken(session.Username, s.config.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	resp := renewAccessTokenResponse{
+		AccessToken:          accessToken,
+		AccessTokenExpiresAt: accessPayload.ExpiredAt,
+	}
+	ctx.JSON(http.StatusOK, resp)
+}

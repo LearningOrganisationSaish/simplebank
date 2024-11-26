@@ -31,7 +31,13 @@ server:
 mock:
 	 mockgen --package mockdb --build_flags=--mod=mod --destination db/mock/store.go github.com/SaishNaik/simplebank/db/sqlc Store
 
-.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock
+db_docs:
+	 dbdocs build doc/db.dbml
+
+db_schema:
+	dbml2sql --postgres -o doc/schema.sql doc/db.dbml
+
+.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock db_docs db_schema
 
 #start: postgres createdb migrateup
 
