@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+//package is a way of grouping multiple proto files together
+package pb;
+
+import "user.proto";
+
+// this will tell protoc which package of golang we want to generate to, which is a subpackage of module in go.mod
+option go_package="github.com/SaishNaik/simplebank/pb";
+
+// 1 or numbers are used to uniquely identify the field
+message CreateUserRequest{
+  string username=1;
+  string full_name=2;
+  string email = 3;
+  string password=4;
+}
+
+message CreateUserResponse{
+  User user=1;
+}
