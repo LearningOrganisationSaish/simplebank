@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+//package is a way of grouping multiple proto files together
+package pb;
+
+import "google/protobuf/timestamp.proto";
+
+// this will tell protoc which package of golang we want to generate to, which is a subpackage of module in go.mod
+option go_package="github.com/SaishNaik/simplebank/pb";
+
+// 1 or numbers are used to uniquely identify the field
+message User{
+  string username=1;
+  string full_name=2;
+  string email = 3;
+  google.protobuf.Timestamp password_changed_at = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
