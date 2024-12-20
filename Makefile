@@ -1,8 +1,14 @@
 postgres:
+	docker rm -f postgres
 	docker run --rm -p 5432:5432 -d --name postgres -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret postgres:16-alpine
 
 createdb:
 	docker exec -it postgres createdb --username=root --owner=root simple_bank
+
+sleep10:
+	sleep 10
+
+local: postgres sleep10 createdb server
 
 migrateup:
 	migrate -path db/migrations -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
@@ -50,7 +56,7 @@ evans:
 	evans --host localhost --port 9090 -r repl
 
 
-.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock db_docs db_schema proto evans
+.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock db_docs db_schema proto evans local
 
 #start: postgres createdb migrateup
 

@@ -17,25 +17,31 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
 	"github.com/rakyll/statik/fs"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
-
-	"log"
 	"net"
 	"net/http"
+	"os"
 )
 
 func main() {
+
 	config, err := utils.LoadConfig(".")
 	if err != nil {
-		log.Fatal("cannot load configurations ", err)
+		log.Fatal().Err(err).Msg("cannot load configurations ")
+	}
+
+	if config.Environment == "development" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	fmt.Println(config.DBSource)
 	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
-		log.Fatal("cannot connect to db", err)
+		log.Fatal().Err(err).Msg("cannot connect to db")
 	}
 
 	runDbMigration(config.MigrationURL, config.DBSource)
@@ -50,21 +56,24 @@ func main() {
 func runGrpcServer(config utils.Config, store db.Store) {
 	server, err := gapi.NewServer(config, store)
 	if err != nil {
-		log.Fatal("cannot create server", err)
+		log.Fatal().Err(err).Msg("cannot create server")
 	}
-	grpcServer := grpc.NewServer()
+
+	grpcLogger := grpc.UnaryInterceptor(gapi.GrpcLogger)
+
+	grpcServer := grpc.NewServer(grpcLogger)
 	pb.RegisterSimpleBankServer(grpcServer, server)
 	reflection.Register(grpcServer) // kind of documentation for the server
 
 	listener, err := net.Listen("tcp", config.GrpcServerAddress)
 	if err != nil {
-		log.Fatal("cannot create listener", err)
+		log.Fatal().Err(err).Msg("cannot create listener")
 	}
 
-	log.Printf("grpc server listening on %s", listener.Addr().String())
+	log.Info().Msgf("grpc server listening on %s", listener.Addr().String())
 	err = grpcServer.Serve(listener)
 	if err != nil {
-		log.Fatal("cannot start grpc server", err)
+		log.Fatal().Err(err).Msg("cannot start grpc server")
 	}
 
 }
@@ -72,7 +81,7 @@ func runGrpcServer(config utils.Config, store db.Store) {
 func runGatewayServer(config utils.Config, store db.Store) {
 	server, err := gapi.NewServer(config, store)
 	if err != nil {
-		log.Fatal("cannot create server", err)
+		log.Fatal().Err(err).Msg("cannot create server")
 	}
 	// to make http response to snake case
 	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
@@ -89,7 +98,7 @@ func runGatewayServer(config utils.Config, store db.Store) {
 	defer cancel()
 	err = pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
 	if err != nil {
-		log.Fatal("cannot start grpc handler server", err)
+		log.Fatal().Err(err).Msg("cannot start grpc handler server")
 	}
 
 	mux := http.NewServeMux()
@@ -97,20 +106,20 @@ func runGatewayServer(config utils.Config, store db.Store) {
 
 	statikFs, err := fs.New()
 	if err != nil {
-		log.Fatal("cannot create statik fs", err)
+		log.Fatal().Err(err).Msg("cannot create statik fs")
 	}
 	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFs))
 	mux.Handle("/swagger/", swaggerHandler)
 
 	listener, err := net.Listen("tcp", config.HttpServerAddress)
 	if err != nil {
-		log.Fatal("cannot create listener", err)
+		log.Fatal().Err(err).Msg("cannot create listener")
 	}
 
-	log.Printf("http gateway server listening on %s", listener.Addr().String())
+	log.Info().Msgf("http gateway server listening on %s", listener.Addr().String())
 	err = http.Serve(listener, mux)
 	if err != nil {
-		log.Fatal("cannot start http gateway server", err)
+		log.Fatal().Err(err).Msg("cannot start http gateway server")
 	}
 
 }
@@ -118,23 +127,23 @@ func runGatewayServer(config utils.Config, store db.Store) {
 func runGinServer(config utils.Config, store db.Store) {
 	server, err := api.NewServer(config, store)
 	if err != nil {
-		log.Fatal("cannot create server", err)
+		log.Fatal().Err(err).Msg("cannot create server")
 	}
 
 	err = server.Start(config.HttpServerAddress)
 	if err != nil {
-		log.Fatal("cannot start server:", err)
+		log.Fatal().Err(err).Msg("cannot start server:")
 	}
 }
 
 func runDbMigration(migrationUrl, dbSource string) {
 	migration, err := migrate.New(migrationUrl, dbSource)
 	if err != nil {
-		log.Fatal("cannot create migration:", err)
+		log.Fatal().Err(err).Msg("cannot create migration:")
 	}
 	err = migration.Up()
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatal("failed to run migrate up:", err)
+		log.Fatal().Err(err).Msg("failed to run migrate up:")
 	}
-	log.Println("db migrated successfully")
+	log.Info().Msg("db migrated successfully")
 }
