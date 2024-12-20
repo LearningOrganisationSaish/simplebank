@@ -56,7 +56,7 @@ evans:
 	evans --host localhost --port 9090 -r repl
 
 
-.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock db_docs db_schema proto evans local
+.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock db_docs db_schema proto evans local sleep10
 
 #start: postgres createdb migrateup
 
