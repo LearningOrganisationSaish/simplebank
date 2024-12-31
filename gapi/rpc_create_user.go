@@ -6,10 +6,13 @@ import (
 	"github.com/SaishNaik/simplebank/pb"
 	"github.com/SaishNaik/simplebank/utils"
 	"github.com/SaishNaik/simplebank/validator"
+	"github.com/SaishNaik/simplebank/worker"
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
@@ -38,6 +41,25 @@ func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 		}
 		return nil, status.Errorf(codes.Internal, "failed to create user: %s", err)
 	}
+
+	opts := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.ProcessIn(10 * time.Second),
+		asynq.Queue(worker.QueueCritical),
+	}
+
+	err = s.taskDistributor.DistributeTaskSendVerifyEmail(
+		ctx,
+		&worker.PayloadSendVerifyEmail{
+			Username: user.Username,
+		},
+		opts...,
+	)
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to distribute task to send  verify email: %v", err)
+	}
+
 	res := &pb.CreateUserResponse{
 		User: convertUser(user),
 	}

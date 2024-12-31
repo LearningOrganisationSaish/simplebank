@@ -23,6 +23,7 @@ func (s *Server) extractMetadata(ctx context.Context) *Metadata {
 		if userAgents := md.Get(grpcGatewayUserAgentHeader); len(userAgents) > 0 {
 			mtdt.UserAgent = userAgents[0]
 		}
+
 		if userAgents := md.Get(userAgent); len(userAgents) > 0 {
 			mtdt.UserAgent = userAgents[0]
 		}
