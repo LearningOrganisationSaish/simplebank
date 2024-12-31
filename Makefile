@@ -52,11 +52,14 @@ proto:
   	--openapiv2_out=doc/swagger --openapiv2_opt=allow_merge=true,merge_file_name=simple_bank \
     proto/*.proto
 	statik -src=./doc/swagger -dest=./doc
+
 evans:
 	evans --host localhost --port 9090 -r repl
 
+redis:
+	docker run --name redis -p 6379:6379 -d redis:7.4-alpine
 
-.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock db_docs db_schema proto evans local sleep10
+.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock db_docs db_schema proto evans local sleep10 alpine
 
 #start: postgres createdb migrateup
 
