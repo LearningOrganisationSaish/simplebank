@@ -29,7 +29,7 @@ sqlc:
 	sqlc generate
 
 test:
-	go test -v -cover ./...
+	go test -v -cover -short ./...
 
 server:
 	go run main.go
@@ -42,6 +42,9 @@ db_docs:
 
 db_schema:
 	dbml2sql --postgres -o doc/schema.sql doc/db.dbml
+
+new_migration:
+		migrate create -ext sql -dir db/migrations -seq $(name)
 
 proto:
 	rm -f pb/*.go
@@ -60,7 +63,7 @@ redis:
 	docker rm -f redis
 	docker run --name redis -p 6379:6379 -d redis:7.4-alpine
 
-.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock db_docs db_schema proto evans local sleep10 alpine
+.PHONY: createdb postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb sqlc test server mock db_docs db_schema proto evans local sleep10 new_migration
 
 #start: postgres createdb migrateup
 
