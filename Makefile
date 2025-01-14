@@ -35,7 +35,9 @@ server:
 	go run main.go
 
 mock:
-	 mockgen --package mockdb --build_flags=--mod=mod --destination db/mock/store.go github.com/SaishNaik/simplebank/db/sqlc Store
+	mockgen --package mockwk --build_flags=--mod=mod --destination worker/mock/distributor.go github.com/SaishNaik/simplebank/worker TaskDistributor
+	mockgen --package mockdb --build_flags=--mod=mod --destination db/mock/store.go github.com/SaishNaik/simplebank/db/sqlc Store
+
 
 db_docs:
 	 dbdocs build doc/db.dbml
