@@ -1,7 +1,6 @@
 package api
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	db "github.com/SaishNaik/simplebank/db/sqlc"
@@ -58,7 +57,7 @@ func (s *Server) createTransfer(ctx *gin.Context) {
 func (s *Server) validAccount(ctx *gin.Context, accountId int64, currency string) (db.Account, bool) {
 	account, err := s.store.GetAccount(ctx, accountId)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, db.ErrRecordNotFound) {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return account, false
 		}

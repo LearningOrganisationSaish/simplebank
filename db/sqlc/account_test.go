@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"github.com/SaishNaik/simplebank/utils"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -17,7 +16,7 @@ func createRandomAccount(t *testing.T) Account {
 		Currency: utils.RandomCurrency(),
 	}
 	ctx := context.Background()
-	account, err := testQueries.CreateAccount(ctx, params)
+	account, err := testStore.CreateAccount(ctx, params)
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
 
@@ -36,7 +35,7 @@ func TestCreateAccount(t *testing.T) {
 func TestGetAccount(t *testing.T) {
 	ctx := context.Background()
 	createdAccount := createRandomAccount(t)
-	gotAccount, err := testQueries.GetAccount(ctx, createdAccount.ID)
+	gotAccount, err := testStore.GetAccount(ctx, createdAccount.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, gotAccount)
 	require.Equal(t, createdAccount.Owner, gotAccount.Owner)
@@ -53,7 +52,7 @@ func TestUpdateAccount(t *testing.T) {
 		ID:      createdAccount.ID,
 		Balance: expectedBalance,
 	}
-	gotAccount, err := testQueries.UpdateAccount(context.Background(), params)
+	gotAccount, err := testStore.UpdateAccount(context.Background(), params)
 	require.NoError(t, err)
 	require.NotEmpty(t, gotAccount)
 
@@ -66,11 +65,11 @@ func TestUpdateAccount(t *testing.T) {
 
 func TestDeleteAccount(t *testing.T) {
 	createdAccount := createRandomAccount(t)
-	err := testQueries.DeleteAccount(context.Background(), createdAccount.ID)
+	err := testStore.DeleteAccount(context.Background(), createdAccount.ID)
 	require.NoError(t, err)
-	gotAccount, err := testQueries.GetAccount(context.Background(), createdAccount.ID)
+	gotAccount, err := testStore.GetAccount(context.Background(), createdAccount.ID)
 	require.Error(t, err)
-	require.Equal(t, err, sql.ErrNoRows)
+	require.Equal(t, err, ErrRecordNotFound)
 	require.Empty(t, gotAccount)
 }
 
@@ -84,7 +83,7 @@ func TestListAccount(t *testing.T) {
 		Limit:  5,
 		Offset: 0,
 	}
-	accounts, err := testQueries.ListAccounts(context.Background(), params)
+	accounts, err := testStore.ListAccounts(context.Background(), params)
 	require.NoError(t, err)
 	require.NotEmpty(t, accounts)
 	for i := 0; i < len(accounts); i++ {

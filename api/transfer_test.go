@@ -89,7 +89,7 @@ func TestTransferAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account1.ID)).
-					Return(db.Account{}, sql.ErrNoRows).Times(1)
+					Return(db.Account{}, db.ErrRecordNotFound).Times(1)
 
 			},
 			checkResponse: func(t *testing.T, response *httptest.ResponseRecorder) {
@@ -114,7 +114,7 @@ func TestTransferAPI(t *testing.T) {
 
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account2.ID)).
-					Return(db.Account{}, sql.ErrNoRows).Times(1)
+					Return(db.Account{}, db.ErrRecordNotFound).Times(1)
 
 			},
 			checkResponse: func(t *testing.T, response *httptest.ResponseRecorder) {
