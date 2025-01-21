@@ -11,7 +11,6 @@ import (
 	"github.com/SaishNaik/simplebank/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
@@ -83,7 +82,7 @@ func TestGetAccountAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
 					Times(1).
-					Return(db.Account{}, sql.ErrNoRows)
+					Return(db.Account{}, db.ErrRecordNotFound)
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				AddAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
@@ -233,7 +232,7 @@ func TestCreateAccountAPI(t *testing.T) {
 				store.EXPECT().
 					CreateAccount(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Account{}, &pq.Error{Code: pq.ErrorCode("23505")})
+					Return(db.Account{}, db.ErrUniqueViolation)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
@@ -256,7 +255,7 @@ func TestCreateAccountAPI(t *testing.T) {
 				store.EXPECT().
 					CreateAccount(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Account{}, &pq.Error{Code: pq.ErrorCode("23503")})
+					Return(db.Account{}, db.ErrUniqueViolation)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
