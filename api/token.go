@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	db "github.com/SaishNaik/simplebank/db/sqlc"
+	"github.com/SaishNaik/simplebank/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
@@ -65,7 +66,7 @@ func (s *Server) renewAccessToken(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, accessPayload, err := s.tokenMaker.CreateToken(session.Username, s.config.AccessTokenDuration)
+	accessToken, accessPayload, err := s.tokenMaker.CreateToken(session.Username, utils.DepositorRole, s.config.AccessTokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

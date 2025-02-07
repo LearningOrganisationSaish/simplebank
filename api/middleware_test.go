@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/SaishNaik/simplebank/token"
+	"github.com/SaishNaik/simplebank/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 )
 
 func AddAuthorization(t *testing.T, request *http.Request, tokenMaker token.Maker, authorizationType string, username string, duration time.Duration) {
-	token, payload, err := tokenMaker.CreateToken(username, duration)
+	token, payload, err := tokenMaker.CreateToken(username, utils.DepositorRole, duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, payload)
 

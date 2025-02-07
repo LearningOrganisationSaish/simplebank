@@ -3,6 +3,7 @@ package gapi
 import (
 	"context"
 	"errors"
+	"fmt"
 	db "github.com/SaishNaik/simplebank/db/sqlc"
 	"github.com/SaishNaik/simplebank/pb"
 	"github.com/SaishNaik/simplebank/utils"
@@ -15,7 +16,7 @@ import (
 )
 
 func (s *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
-	authPayload, err := s.authorizeUser(ctx)
+	authPayload, err := s.authorizeUser(ctx, []string{utils.DepositorRole, utils.BankerRole})
 	if err != nil {
 		return nil, unauthenticatedError(err)
 	}
@@ -25,7 +26,8 @@ func (s *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb
 		return nil, invalidArgumentError(violations)
 	}
 
-	if authPayload.Username != req.GetUsername() {
+	fmt.Println(authPayload.Role, authPayload.Username, req.GetUsername())
+	if authPayload.Role == utils.DepositorRole && authPayload.Username != req.GetUsername() {
 		return nil, status.Errorf(codes.PermissionDenied, "cannot update other user's info")
 	}
 
