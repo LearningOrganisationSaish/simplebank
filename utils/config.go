@@ -19,6 +19,7 @@ type Config struct {
 	EmailSenderName      string        `mapstructure:"EMAIL_SENDER_NAME"`
 	EmailSenderAddress   string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
 	EmailSenderPassword  string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
+	AllowedOrigins       []string      `mapstructure:"ALLOWED_ORIGINS"`
 }
 
 // LoadConfig reads configuration from file or environment variables

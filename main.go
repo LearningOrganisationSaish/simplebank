@@ -19,6 +19,7 @@ import (
 	_ "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rakyll/statik/fs"
+	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -166,8 +167,12 @@ func runGatewayServer(ctx context.Context, waitGroup *errgroup.Group, config uti
 	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFs))
 	mux.Handle("/swagger/", swaggerHandler)
 
+	c := cors.New(cors.Options{
+		//AllowedOrigins: config.AllowedOrigins,
+	})
+	corsHandler := c.Handler(gapi.HttpLogger(mux))
 	httpServer := &http.Server{
-		Handler: gapi.HttpLogger(mux),
+		Handler: corsHandler,
 		Addr:    config.HttpServerAddress,
 	}
 
